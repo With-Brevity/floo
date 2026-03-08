@@ -1,0 +1,22 @@
+{
+  "name": "finance",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:server": "pnpm --filter server dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev": "pnpm run dev:server & pnpm run dev:web",
+    "build:server": "pnpm --filter server build",
+    "build:web": "pnpm --filter web build",
+    "db:push:server": "pnpm --filter server db:push",
+    "db:push:web": "pnpm --filter web db:push"
+  },
+  "packageManager": "pnpm@10.28.2",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "sharp"
+    ]
+  }
+}

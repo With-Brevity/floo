@@ -1,0 +1,27 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "db:push": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@finance/shared": "workspace:*",
+    "@vercel/postgres": "^0.10.0",
+    "drizzle-orm": "^0.38.0",
+    "next": "^15.1.0",
+    "plaid": "^28.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "stripe": "^17.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "drizzle-kit": "^0.30.0",
+    "typescript": "^5.7.0"
+  }
+}
