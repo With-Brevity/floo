@@ -19,18 +19,12 @@ importers:
       drizzle-orm:
         specifier: ^0.38.0
         version: 0.38.4(@types/better-sqlite3@7.6.13)(@types/pg@8.11.6)(@types/react@19.2.14)(@vercel/postgres@0.10.0)(better-sqlite3@11.10.0)(react@19.2.4)
-      next:
-        specifier: ^15.1.0
-        version: 15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      hono:
+        specifier: ^4.0.0
+        version: 4.12.5
       plaid:
         specifier: ^28.0.0
         version: 28.0.0
-      react:
-        specifier: ^19.0.0
-        version: 19.2.4
-      react-dom:
-        specifier: ^19.0.0
-        version: 19.2.4(react@19.2.4)
       stripe:
         specifier: ^17.0.0
         version: 17.7.0
@@ -38,9 +32,6 @@ importers:
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.15
-      '@types/react':
-        specifier: ^19.0.0
-        version: 19.2.14
       drizzle-kit:
         specifier: ^0.30.0
         version: 0.30.6
@@ -1120,6 +1111,10 @@ packages:
   hasown@2.0.2:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
+
+  hono@4.12.5:
+    resolution: {integrity: sha512-3qq+FUBtlTHhtYxbxheZgY8NIFnkkC/MR8u5TTsr7YZ3wixryQ3cCwn3iZbg8p8B88iDBBAYSfZDS75t8MN7Vg==}
+    engines: {node: '>=16.9.0'}
 
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
@@ -2307,6 +2302,8 @@ snapshots:
   hasown@2.0.2:
     dependencies:
       function-bind: 1.1.2
+
+  hono@4.12.5: {}
 
   ieee754@1.2.1: {}
 

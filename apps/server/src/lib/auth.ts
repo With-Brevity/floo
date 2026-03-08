@@ -1,5 +1,8 @@
 import { eq } from "drizzle-orm";
+import { createMiddleware } from "hono/factory";
 import { getDb, schema } from "@/db";
+
+export type UserRow = typeof schema.users.$inferSelect;
 
 export async function validateApiKey(request: Request) {
   const db = getDb();
@@ -18,26 +21,13 @@ export async function validateApiKey(request: Request) {
   return user ?? null;
 }
 
-export function corsResponse(body: unknown, status = 200) {
-  return Response.json(body, {
-    status,
-    headers: {
-      "Access-Control-Allow-Origin":
-        process.env.ALLOWED_ORIGIN || "http://localhost:3000",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    },
-  });
-}
-
-export function optionsResponse() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin":
-        process.env.ALLOWED_ORIGIN || "http://localhost:3000",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    },
-  });
-}
+export const authMiddleware = createMiddleware<{
+  Variables: { user: UserRow };
+}>(async (c, next) => {
+  const user = await validateApiKey(c.req.raw);
+  if (!user) {
+    return c.json({ error: "Invalid API key" }, 401);
+  }
+  c.set("user", user);
+  await next();
+});
