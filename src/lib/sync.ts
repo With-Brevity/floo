@@ -5,9 +5,11 @@ export async function syncConnection(apiClient: ApiClient, connectionId: string)
   const connection = queries.getConnection(connectionId);
   if (!connection) throw new Error(`Connection ${connectionId} not found`);
 
+  // Sync balances first to ensure accounts exist (needed for FK constraints)
+  await syncBalances(apiClient, connection);
+
   await Promise.all([
     syncTransactions(apiClient, connection),
-    syncBalances(apiClient, connection),
     syncInvestments(apiClient, connection),
   ]);
 }
