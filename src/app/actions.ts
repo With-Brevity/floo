@@ -61,6 +61,14 @@ export async function syncAllAction() {
   return results;
 }
 
+export async function openBillingPortalAction(returnUrl: string) {
+  const apiKey = queries.getApiKey();
+  if (!apiKey) throw new Error("No API key configured");
+
+  const client = new ApiClient(apiKey);
+  return client.createPortalSession(returnUrl);
+}
+
 export async function getApiKeyAction() {
   return queries.getApiKey();
 }

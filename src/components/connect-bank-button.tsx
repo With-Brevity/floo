@@ -90,7 +90,7 @@ export function ConnectBankButton({ apiKey }: { apiKey: string | null }) {
           : status === "linking"
           ? "Preparing..."
           : !apiKey
-          ? "Connect Bank ($3)"
+          ? "Subscribe ($5/mo)"
           : "Connect Bank"}
       </button>
       {error && <p className="text-destructive text-sm mt-2">{error}</p>}

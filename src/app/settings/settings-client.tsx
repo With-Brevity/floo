@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import {
   claimApiKeyAction,
   saveApiKeyAction,
+  openBillingPortalAction,
 } from "@/app/actions";
 
 interface Connection {
@@ -35,7 +36,7 @@ export function SettingsClient({
       claimApiKeyAction(sessionId)
         .then((result) => {
           setApiKey(result.apiKey);
-          setStatus(`API key claimed! You have ${result.credits} credit(s).`);
+          setStatus("API key claimed! Subscription active.");
           // Remove session_id from URL
           window.history.replaceState({}, "", "/settings");
         })
@@ -61,7 +62,7 @@ export function SettingsClient({
         <h2 className="font-semibold">API Key</h2>
         <p className="text-sm text-muted-foreground">
           Your API key authenticates requests to the finance server. Get one by
-          connecting a bank account ($3 per connection).
+          subscribing ($5/mo for unlimited bank connections).
         </p>
         <form onSubmit={handleSaveApiKey} className="flex gap-2">
           <input
@@ -89,6 +90,31 @@ export function SettingsClient({
           </p>
         )}
       </div>
+
+      {/* Billing */}
+      {initialApiKey && (
+        <div className="border border-border rounded-xl p-6 bg-card space-y-4">
+          <h2 className="font-semibold">Billing</h2>
+          <p className="text-sm text-muted-foreground">
+            Manage your subscription, update payment method, or cancel.
+          </p>
+          <button
+            onClick={async () => {
+              try {
+                const { url } = await openBillingPortalAction(window.location.href);
+                window.location.href = url;
+              } catch (e) {
+                setStatus(
+                  `Error: ${e instanceof Error ? e.message : "Failed to open billing portal"}`
+                );
+              }
+            }}
+            className="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90"
+          >
+            Manage Billing
+          </button>
+        </div>
+      )}
 
       {/* Connections */}
       <div className="border border-border rounded-xl p-6 bg-card space-y-4">

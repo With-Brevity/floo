@@ -32,9 +32,17 @@ export class ApiClient {
   verify() {
     return this.request<{
       valid: boolean;
-      credits: number;
+      subscriptionStatus: string;
+      currentPeriodEnd: string | null;
       email: string;
     }>("/api/auth/verify");
+  }
+
+  createPortalSession(returnUrl: string) {
+    return this.request<{ url: string }>("/api/stripe/portal", {
+      method: "POST",
+      body: JSON.stringify({ returnUrl }),
+    });
   }
 
   createLinkToken() {
@@ -180,6 +188,6 @@ export async function claimApiKey(sessionId: string) {
   return res.json() as Promise<{
     apiKey: string;
     email: string;
-    credits: number;
+    subscriptionStatus: string;
   }>;
 }
