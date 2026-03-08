@@ -9,7 +9,8 @@
     "build:server": "pnpm --filter server build",
     "build:web": "pnpm --filter web build",
     "db:push:server": "pnpm --filter server db:push",
-    "db:push:web": "pnpm --filter web db:push"
+    "db:push:web": "pnpm --filter web db:push",
+    "test:server": "pnpm --filter server test"
   },
   "packageManager": "pnpm@10.28.2",
   "pnpm": {

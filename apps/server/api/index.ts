@@ -406,4 +406,5 @@ app.post("/plaid/investments", authMiddleware, async (c) => {
   } satisfies InvestmentsResponse);
 });
 
+export { app };
 export default handle(app);
