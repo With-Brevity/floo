@@ -332,7 +332,7 @@ export function replaceHoldingsForConnection(
 export function getNetWorth() {
   const [row] = db
     .select({
-      total: sql<number>`COALESCE(SUM(current_balance), 0)`,
+      total: sql<number>`COALESCE(SUM(CASE WHEN type IN ('credit', 'loan') THEN -current_balance ELSE current_balance END), 0)`,
     })
     .from(schema.accounts)
     .all();
