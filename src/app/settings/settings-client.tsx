@@ -62,7 +62,7 @@ export function SettingsClient({
       <div className="border border-border rounded-xl p-6 bg-card space-y-4">
         <h2 className="font-semibold">API Key</h2>
         <p className="text-sm text-muted-foreground">
-          Your API key authenticates requests to the finance server. Get one by
+          Your API key authenticates requests to the Floo server. Get one by
           subscribing ($5/mo for unlimited bank connections).
         </p>
         <form onSubmit={handleSaveApiKey} className="flex gap-2">
@@ -70,7 +70,7 @@ export function SettingsClient({
             type="text"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            placeholder="fin_..."
+            placeholder="floo_..."
             className="flex-1 px-3 py-1.5 border border-border rounded-lg bg-background text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           />
           <button

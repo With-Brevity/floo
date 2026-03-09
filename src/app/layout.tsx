@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Finance Dashboard",
+  title: "Floo",
   description: "Personal finance dashboard",
 };
 
@@ -33,7 +33,7 @@ export default function RootLayout({
         <div className="flex min-h-screen">
           {/* Sidebar */}
           <aside className="w-56 border-r border-border bg-card p-4 flex flex-col gap-1">
-            <h1 className="text-lg font-bold px-3 py-2 mb-4">Finance</h1>
+            <h1 className="text-lg font-bold px-3 py-2 mb-4">Floo</h1>
             {navItems.map((item) => (
               <Link
                 key={item.href}
