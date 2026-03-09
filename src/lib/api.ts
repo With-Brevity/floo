@@ -1,5 +1,4 @@
-const SERVER_URL =
-  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3001";
+const SERVER_URL = "https://floo-server.vercel.app";
 
 export class ApiClient {
   private sessionToken: string;
