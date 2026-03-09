@@ -18,7 +18,7 @@ export function ConnectBankButton({ apiKey }: { apiKey: string | null }) {
       setStatus("checkout");
       try {
         const { url } = await createCheckoutSession(
-          `${window.location.origin}/settings`
+          window.location.origin
         );
         window.location.href = url;
       } catch (e) {

@@ -2,6 +2,8 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import * as queries from "@/db/queries";
 import { ConnectBankButton } from "@/components/connect-bank-button";
 import { SyncButton } from "@/components/sync-button";
+import { OnboardingStepper } from "@/components/onboarding-stepper";
+import { ClaimApiKey } from "@/components/claim-api-key";
 
 export const dynamic = "force-dynamic";
 
@@ -31,22 +33,22 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <div className="flex items-center gap-3">
-          {connections.length > 0 && <SyncButton />}
-          <ConnectBankButton apiKey={apiKey} />
-        </div>
+        {accounts.length > 0 && (
+          <div className="flex items-center gap-3">
+            {connections.length > 0 && <SyncButton />}
+            <ConnectBankButton apiKey={apiKey} />
+          </div>
+        )}
       </div>
 
-      {connections.length === 0 ? (
-        <div className="border border-border rounded-xl p-12 text-center">
-          <h2 className="text-xl font-semibold mb-2">
-            Welcome to Finance Dashboard
-          </h2>
-          <p className="text-muted-foreground mb-6">
-            Connect your first bank account to get started.
-          </p>
-          <ConnectBankButton apiKey={apiKey} />
-        </div>
+      <ClaimApiKey />
+
+      {accounts.length === 0 ? (
+        <OnboardingStepper
+          apiKey={apiKey}
+          connectionsCount={connections.length}
+          accountsCount={accounts.length}
+        />
       ) : (
         <>
           {/* Summary cards */}

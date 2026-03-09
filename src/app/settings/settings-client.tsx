@@ -6,6 +6,7 @@ import {
   claimApiKeyAction,
   saveApiKeyAction,
   openBillingPortalAction,
+  clearAllDataAction,
 } from "@/app/actions";
 
 interface Connection {
@@ -146,6 +147,30 @@ export function SettingsClient({
             ))}
           </div>
         )}
+      </div>
+
+      {/* Clear Data */}
+      <div className="border border-destructive/30 rounded-xl p-6 bg-card space-y-4">
+        <h2 className="font-semibold">Clear All Data</h2>
+        <p className="text-sm text-muted-foreground">
+          Remove all local data including connections, accounts, transactions,
+          and your API key. Your Stripe subscription is not affected.
+        </p>
+        <button
+          onClick={async () => {
+            if (
+              !confirm(
+                "Are you sure? This will delete all local data (connections, accounts, transactions, and API key). Your Stripe subscription will not be cancelled."
+              )
+            )
+              return;
+            await clearAllDataAction();
+            window.location.href = "/";
+          }}
+          className="px-4 py-1.5 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:opacity-90"
+        >
+          Clear All Data
+        </button>
       </div>
     </div>
   );

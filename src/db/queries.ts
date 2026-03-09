@@ -27,6 +27,15 @@ export function setApiKey(key: string) {
   setSetting("api_key", key);
 }
 
+export function clearAllData() {
+  db.delete(schema.holdings).run();
+  db.delete(schema.transactions).run();
+  db.delete(schema.accounts).run();
+  db.delete(schema.connections).run();
+  db.delete(schema.securities).run();
+  db.delete(schema.settings).run();
+}
+
 // ---- Connections ----
 export function getConnections() {
   return db.select().from(schema.connections).all();

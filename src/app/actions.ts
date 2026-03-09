@@ -72,3 +72,12 @@ export async function openBillingPortalAction(returnUrl: string) {
 export async function getApiKeyAction() {
   return queries.getApiKey();
 }
+
+export async function clearAllDataAction() {
+  queries.clearAllData();
+  revalidatePath("/");
+  revalidatePath("/settings");
+  revalidatePath("/accounts");
+  revalidatePath("/transactions");
+  revalidatePath("/investments");
+}
