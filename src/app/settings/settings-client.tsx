@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 import {
-  claimApiKeyAction,
-  saveApiKeyAction,
   openBillingPortalAction,
+  signOutAction,
   clearAllDataAction,
+  refreshSubscriptionAction,
 } from "@/app/actions";
+import { getSignInUrl } from "@/lib/api";
 
 interface Connection {
   id: string;
@@ -17,74 +17,85 @@ interface Connection {
 }
 
 export function SettingsClient({
-  initialApiKey,
+  isSignedIn,
+  email,
+  name,
+  subscriptionStatus,
   connections,
 }: {
-  initialApiKey: string | null;
+  isSignedIn: boolean;
+  email: string | null;
+  name: string | null;
+  subscriptionStatus: string;
   connections: Connection[];
 }) {
-  const searchParams = useSearchParams();
-  const sessionId = searchParams.get("session_id");
-  const [apiKey, setApiKey] = useState(initialApiKey || "");
   const [status, setStatus] = useState<string | null>(null);
-  const [claiming, setClaiming] = useState(false);
-
-  // Auto-claim API key if redirected from Stripe
-  useEffect(() => {
-    if (sessionId && !initialApiKey) {
-      setClaiming(true);
-      setStatus("Claiming API key...");
-      claimApiKeyAction(sessionId)
-        .then((result) => {
-          setApiKey(result.apiKey);
-          setStatus("API key claimed! Subscription active.");
-          // Remove session_id from URL
-          window.history.replaceState({}, "", "/settings");
-        })
-        .catch((e) => {
-          setStatus(`Error: ${e.message}`);
-        })
-        .finally(() => setClaiming(false));
-    }
-  }, [sessionId, initialApiKey]);
-
-  async function handleSaveApiKey(e: React.FormEvent) {
-    e.preventDefault();
-    await saveApiKeyAction(apiKey);
-    setStatus("API key saved!");
-  }
 
   return (
     <div className="space-y-6 max-w-2xl">
       <h1 className="text-2xl font-bold">Settings</h1>
 
-      {/* API Key */}
+      {/* Account */}
       <div className="border border-border rounded-xl p-6 bg-card space-y-4">
-        <h2 className="font-semibold">API Key</h2>
-        <p className="text-sm text-muted-foreground">
-          Your API key authenticates requests to the Floo server. Get one by
-          subscribing ($5/mo for unlimited bank connections).
-        </p>
-        <form onSubmit={handleSaveApiKey} className="flex gap-2">
-          <input
-            type="text"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="floo_..."
-            className="flex-1 px-3 py-1.5 border border-border rounded-lg bg-background text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-          />
-          <button
-            type="submit"
-            disabled={claiming}
-            className="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
-          >
-            Save
-          </button>
-        </form>
+        <h2 className="font-semibold">Account</h2>
+        {isSignedIn ? (
+          <>
+            <div className="text-sm space-y-1">
+              {name && <p className="font-medium">{name}</p>}
+              {email && (
+                <p className="text-muted-foreground">{email}</p>
+              )}
+              <p className="text-muted-foreground">
+                Subscription:{" "}
+                <span className="capitalize">{subscriptionStatus}</span>
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  try {
+                    await refreshSubscriptionAction();
+                    setStatus("Subscription status refreshed.");
+                  } catch (e) {
+                    setStatus(
+                      `Error: ${e instanceof Error ? e.message : "Failed to refresh"}`
+                    );
+                  }
+                }}
+                className="px-4 py-1.5 border border-border rounded-lg text-sm font-medium hover:bg-accent transition-colors"
+              >
+                Refresh Status
+              </button>
+              <button
+                onClick={async () => {
+                  await signOutAction();
+                  window.location.href = "/";
+                }}
+                className="px-4 py-1.5 border border-border rounded-lg text-sm font-medium hover:bg-accent transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Sign in with GitHub to get started.
+            </p>
+            <a
+              href={getSignInUrl()}
+              className="inline-block px-4 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90"
+            >
+              Sign in with GitHub
+            </a>
+          </>
+        )}
         {status && (
           <p
             className={`text-sm ${
-              status.startsWith("Error") ? "text-destructive" : "text-success"
+              status.startsWith("Error")
+                ? "text-destructive"
+                : "text-success"
             }`}
           >
             {status}
@@ -93,7 +104,7 @@ export function SettingsClient({
       </div>
 
       {/* Billing */}
-      {initialApiKey && (
+      {isSignedIn && subscriptionStatus === "active" && (
         <div className="border border-border rounded-xl p-6 bg-card space-y-4">
           <h2 className="font-semibold">Billing</h2>
           <p className="text-sm text-muted-foreground">
@@ -102,7 +113,9 @@ export function SettingsClient({
           <button
             onClick={async () => {
               try {
-                const { url } = await openBillingPortalAction(window.location.href);
+                const { url } = await openBillingPortalAction(
+                  window.location.href
+                );
                 window.location.href = url;
               } catch (e) {
                 setStatus(
@@ -136,7 +149,8 @@ export function SettingsClient({
                     {conn.institutionName}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Connected {new Date(conn.createdAt).toLocaleDateString()}
+                    Connected{" "}
+                    {new Date(conn.createdAt).toLocaleDateString()}
                     {conn.lastSyncedAt &&
                       ` | Last sync: ${new Date(
                         conn.lastSyncedAt
@@ -153,14 +167,15 @@ export function SettingsClient({
       <div className="border border-destructive/30 rounded-xl p-6 bg-card space-y-4">
         <h2 className="font-semibold">Clear All Data</h2>
         <p className="text-sm text-muted-foreground">
-          Remove all local data including connections, accounts, transactions,
-          and your API key. Your Stripe subscription is not affected.
+          Remove all local data including connections, accounts,
+          transactions, and your session. Your Stripe subscription is not
+          affected.
         </p>
         <button
           onClick={async () => {
             if (
               !confirm(
-                "Are you sure? This will delete all local data (connections, accounts, transactions, and API key). Your Stripe subscription will not be cancelled."
+                "Are you sure? This will delete all local data (connections, accounts, transactions, and session). Your Stripe subscription will not be cancelled."
               )
             )
               return;

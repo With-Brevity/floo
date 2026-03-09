@@ -1,11 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { createCheckoutSession, ApiClient } from "@/lib/api";
+import { ApiClient, getSignInUrl } from "@/lib/api";
 import { PlaidLinkButton } from "./plaid-link";
 import { saveConnectionAction } from "@/app/actions";
 
-export function ConnectBankButton({ apiKey }: { apiKey: string | null }) {
+interface ConnectBankButtonProps {
+  sessionToken: string | null;
+  subscriptionStatus: string;
+}
+
+export function ConnectBankButton({
+  sessionToken,
+  subscriptionStatus,
+}: ConnectBankButtonProps) {
   const [status, setStatus] = useState<
     "idle" | "checkout" | "linking" | "done" | "error"
   >("idle");
@@ -13,36 +21,52 @@ export function ConnectBankButton({ apiKey }: { apiKey: string | null }) {
   const [error, setError] = useState<string | null>(null);
 
   async function handleConnect() {
-    if (!apiKey) {
-      // No API key — redirect to Stripe checkout
+    if (!sessionToken) {
+      // Not signed in — redirect to sign in
+      window.location.href = getSignInUrl();
+      return;
+    }
+
+    const client = new ApiClient(sessionToken);
+
+    if (subscriptionStatus !== "active") {
+      // Signed in but not subscribed — redirect to Stripe checkout
       setStatus("checkout");
       try {
-        const { url } = await createCheckoutSession(
+        const { url } = await client.createCheckoutSession(
           window.location.origin
         );
         window.location.href = url;
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to start checkout");
+        setError(
+          e instanceof Error ? e.message : "Failed to start checkout"
+        );
         setStatus("error");
       }
       return;
     }
 
-    // Have API key — request link token
+    // Subscribed — request link token
     setStatus("linking");
     try {
-      const client = new ApiClient(apiKey);
       const { linkToken: token } = await client.createLinkToken();
       setLinkToken(token);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create link token");
+      setError(
+        e instanceof Error ? e.message : "Failed to create link token"
+      );
       setStatus("error");
     }
   }
 
-  async function handlePlaidSuccess(publicToken: string, metadata: { institution?: { institution_id: string; name: string } | null }) {
+  async function handlePlaidSuccess(
+    publicToken: string,
+    metadata: {
+      institution?: { institution_id: string; name: string } | null;
+    }
+  ) {
     try {
-      const client = new ApiClient(apiKey!);
+      const client = new ApiClient(sessionToken!);
       const result = await client.exchangeToken(
         publicToken,
         metadata.institution?.institution_id || "unknown",
@@ -53,14 +77,17 @@ export function ConnectBankButton({ apiKey }: { apiKey: string | null }) {
         id: result.itemId,
         accessToken: result.accessToken,
         institutionId: metadata.institution?.institution_id || "unknown",
-        institutionName: metadata.institution?.name || "Unknown Institution",
+        institutionName:
+          metadata.institution?.name || "Unknown Institution",
       });
 
       setStatus("done");
       setLinkToken(null);
       window.location.reload();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to connect bank");
+      setError(
+        e instanceof Error ? e.message : "Failed to connect bank"
+      );
       setStatus("error");
     }
   }
@@ -78,6 +105,12 @@ export function ConnectBankButton({ apiKey }: { apiKey: string | null }) {
     );
   }
 
+  const label = !sessionToken
+    ? "Sign in"
+    : subscriptionStatus !== "active"
+    ? "Subscribe ($5/mo)"
+    : "Connect Bank";
+
   return (
     <div>
       <button
@@ -89,9 +122,7 @@ export function ConnectBankButton({ apiKey }: { apiKey: string | null }) {
           ? "Redirecting to payment..."
           : status === "linking"
           ? "Preparing..."
-          : !apiKey
-          ? "Subscribe ($5/mo)"
-          : "Connect Bank"}
+          : label}
       </button>
       {error && <p className="text-destructive text-sm mt-2">{error}</p>}
       {status === "done" && (

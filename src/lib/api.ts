@@ -2,10 +2,10 @@ const SERVER_URL =
   process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3001";
 
 export class ApiClient {
-  private apiKey: string;
+  private sessionToken: string;
 
-  constructor(apiKey: string) {
-    this.apiKey = apiKey;
+  constructor(sessionToken: string) {
+    this.sessionToken = sessionToken;
   }
 
   private async request<T>(
@@ -16,7 +16,7 @@ export class ApiClient {
       ...options,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.sessionToken}`,
         ...options.headers,
       },
     });
@@ -29,17 +29,25 @@ export class ApiClient {
     return res.json();
   }
 
-  verify() {
+  getMe() {
     return this.request<{
-      valid: boolean;
+      id: string;
+      name: string;
+      email: string;
       subscriptionStatus: string;
       currentPeriodEnd: string | null;
-      email: string;
-    }>("/api/auth/verify");
+    }>("/api/me");
   }
 
   createPortalSession(returnUrl: string) {
     return this.request<{ url: string }>("/api/stripe/portal", {
+      method: "POST",
+      body: JSON.stringify({ returnUrl }),
+    });
+  }
+
+  createCheckoutSession(returnUrl: string) {
+    return this.request<{ url: string }>("/api/stripe/checkout", {
       method: "POST",
       body: JSON.stringify({ returnUrl }),
     });
@@ -154,30 +162,12 @@ export class ApiClient {
   }
 }
 
-// Non-authenticated endpoints
-export async function createCheckoutSession(
-  returnUrl: string,
-  email?: string
-) {
-  const res = await fetch(`${SERVER_URL}/api/stripe/checkout`, {
+// Non-authenticated endpoint
+export async function exchangeCode(code: string) {
+  const res = await fetch(`${SERVER_URL}/api/token/exchange`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ returnUrl, email }),
-  });
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(body.error || `API error: ${res.status}`);
-  }
-
-  return res.json() as Promise<{ url: string }>;
-}
-
-export async function claimApiKey(sessionId: string) {
-  const res = await fetch(`${SERVER_URL}/api/auth/claim`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionId }),
+    body: JSON.stringify({ code }),
   });
 
   if (!res.ok) {
@@ -186,8 +176,17 @@ export async function claimApiKey(sessionId: string) {
   }
 
   return res.json() as Promise<{
-    apiKey: string;
-    email: string;
-    subscriptionStatus: string;
+    sessionToken: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      subscriptionStatus: string;
+      currentPeriodEnd: string | null;
+    };
   }>;
+}
+
+export function getSignInUrl() {
+  return `${SERVER_URL}/api/signin/github`;
 }

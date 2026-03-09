@@ -3,12 +3,14 @@ import * as queries from "@/db/queries";
 import { ConnectBankButton } from "@/components/connect-bank-button";
 import { SyncButton } from "@/components/sync-button";
 import { OnboardingStepper } from "@/components/onboarding-stepper";
-import { ClaimApiKey } from "@/components/claim-api-key";
+import { CheckoutReturn } from "@/components/checkout-return";
 
 export const dynamic = "force-dynamic";
 
 export default function DashboardPage() {
-  const apiKey = queries.getApiKey();
+  const sessionToken = queries.getSessionToken();
+  const subscriptionStatus =
+    queries.getSetting("subscription_status") || "none";
   const connections = queries.getConnections();
   const netWorth = queries.getNetWorth();
   const recentTransactions = queries.getRecentTransactions(5);
@@ -25,7 +27,9 @@ export default function DashboardPage() {
   );
 
   const spending30d = queries.getSpendingByCategory(
-    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0]
   );
   const totalSpending30d = spending30d.reduce((sum, s) => sum + s.total, 0);
 
@@ -36,16 +40,20 @@ export default function DashboardPage() {
         {accounts.length > 0 && (
           <div className="flex items-center gap-3">
             {connections.length > 0 && <SyncButton />}
-            <ConnectBankButton apiKey={apiKey} />
+            <ConnectBankButton
+              sessionToken={sessionToken}
+              subscriptionStatus={subscriptionStatus}
+            />
           </div>
         )}
       </div>
 
-      <ClaimApiKey />
+      <CheckoutReturn />
 
       {accounts.length === 0 ? (
         <OnboardingStepper
-          apiKey={apiKey}
+          sessionToken={sessionToken}
+          subscriptionStatus={subscriptionStatus}
           connectionsCount={connections.length}
           accountsCount={accounts.length}
         />

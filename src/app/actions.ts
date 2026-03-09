@@ -5,17 +5,20 @@ import { syncConnection, syncAllConnections } from "@/lib/sync";
 import * as queries from "@/db/queries";
 import { revalidatePath } from "next/cache";
 
-export async function claimApiKeyAction(sessionId: string) {
-  const { claimApiKey } = await import("@/lib/api");
-  const result = await claimApiKey(sessionId);
-  queries.setApiKey(result.apiKey);
+export async function exchangeCodeAction(code: string) {
+  const { exchangeCode } = await import("@/lib/api");
+  const result = await exchangeCode(code);
+  queries.setSessionToken(result.sessionToken);
+  queries.setSetting("user_id", result.user.id);
+  queries.setSetting("user_email", result.user.email);
+  queries.setSetting("user_name", result.user.name);
+  queries.setSetting(
+    "subscription_status",
+    result.user.subscriptionStatus
+  );
+  revalidatePath("/");
   revalidatePath("/settings");
   return result;
-}
-
-export async function saveApiKeyAction(apiKey: string) {
-  queries.setApiKey(apiKey);
-  revalidatePath("/settings");
 }
 
 export async function saveConnectionAction(data: {
@@ -37,10 +40,10 @@ export async function deleteConnectionAction(id: string) {
 }
 
 export async function syncConnectionAction(connectionId: string) {
-  const apiKey = queries.getApiKey();
-  if (!apiKey) throw new Error("No API key configured");
+  const sessionToken = queries.getSessionToken();
+  if (!sessionToken) throw new Error("Not signed in");
 
-  const client = new ApiClient(apiKey);
+  const client = new ApiClient(sessionToken);
   await syncConnection(client, connectionId);
   revalidatePath("/");
   revalidatePath("/transactions");
@@ -49,10 +52,10 @@ export async function syncConnectionAction(connectionId: string) {
 }
 
 export async function syncAllAction() {
-  const apiKey = queries.getApiKey();
-  if (!apiKey) throw new Error("No API key configured");
+  const sessionToken = queries.getSessionToken();
+  if (!sessionToken) throw new Error("Not signed in");
 
-  const client = new ApiClient(apiKey);
+  const client = new ApiClient(sessionToken);
   const results = await syncAllConnections(client);
   revalidatePath("/");
   revalidatePath("/transactions");
@@ -62,15 +65,42 @@ export async function syncAllAction() {
 }
 
 export async function openBillingPortalAction(returnUrl: string) {
-  const apiKey = queries.getApiKey();
-  if (!apiKey) throw new Error("No API key configured");
+  const sessionToken = queries.getSessionToken();
+  if (!sessionToken) throw new Error("Not signed in");
 
-  const client = new ApiClient(apiKey);
+  const client = new ApiClient(sessionToken);
   return client.createPortalSession(returnUrl);
 }
 
-export async function getApiKeyAction() {
-  return queries.getApiKey();
+export async function getSessionAction() {
+  const sessionToken = queries.getSessionToken();
+  if (!sessionToken) return null;
+  return {
+    sessionToken,
+    email: queries.getSetting("user_email"),
+    name: queries.getSetting("user_name"),
+    subscriptionStatus: queries.getSetting("subscription_status") || "none",
+  };
+}
+
+export async function signOutAction() {
+  queries.clearSession();
+  revalidatePath("/");
+  revalidatePath("/settings");
+}
+
+export async function refreshSubscriptionAction() {
+  const sessionToken = queries.getSessionToken();
+  if (!sessionToken) throw new Error("Not signed in");
+
+  const client = new ApiClient(sessionToken);
+  const me = await client.getMe();
+  queries.setSetting("subscription_status", me.subscriptionStatus);
+  if (me.email) queries.setSetting("user_email", me.email);
+  if (me.name) queries.setSetting("user_name", me.name);
+  revalidatePath("/");
+  revalidatePath("/settings");
+  return me;
 }
 
 export async function clearAllDataAction() {

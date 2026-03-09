@@ -7,7 +7,9 @@ import { DeleteConnectionButton } from "./delete-connection-button";
 export const dynamic = "force-dynamic";
 
 export default function AccountsPage() {
-  const apiKey = queries.getApiKey();
+  const sessionToken = queries.getSessionToken();
+  const subscriptionStatus =
+    queries.getSetting("subscription_status") || "none";
   const connections = queries.getConnections();
   const accounts = queries.getAccounts();
 
@@ -23,7 +25,7 @@ export default function AccountsPage() {
         <h1 className="text-2xl font-bold">Accounts</h1>
         <div className="flex items-center gap-3">
           {connections.length > 0 && <SyncButton />}
-          <ConnectBankButton apiKey={apiKey} />
+          <ConnectBankButton sessionToken={sessionToken} subscriptionStatus={subscriptionStatus} />
         </div>
       </div>
 

@@ -1,14 +1,20 @@
 import { Check } from "lucide-react";
 import { ConnectBankButton } from "./connect-bank-button";
 import { SyncButton } from "./sync-button";
+import { getSignInUrl } from "@/lib/api";
 
 interface OnboardingStepperProps {
-  apiKey: string | null;
+  sessionToken: string | null;
+  subscriptionStatus: string;
   connectionsCount: number;
   accountsCount: number;
 }
 
 const steps = [
+  {
+    title: "Sign in with GitHub",
+    description: "Authenticate to get started.",
+  },
   {
     title: "Subscribe",
     description: "Start your $5/month subscription to unlock bank connections.",
@@ -24,12 +30,17 @@ const steps = [
 ];
 
 export function OnboardingStepper({
-  apiKey,
+  sessionToken,
+  subscriptionStatus,
   connectionsCount,
   accountsCount,
 }: OnboardingStepperProps) {
+  const isSignedIn = sessionToken !== null;
+  const isSubscribed = subscriptionStatus === "active";
+
   const completed = [
-    apiKey !== null,
+    isSignedIn,
+    isSubscribed,
     connectionsCount > 0,
     accountsCount > 0,
   ];
@@ -94,9 +105,27 @@ export function OnboardingStepper({
                 </p>
                 {isCurrent && (
                   <div className="mt-3">
-                    {i === 0 && <ConnectBankButton apiKey={null} />}
-                    {i === 1 && <ConnectBankButton apiKey={apiKey} />}
-                    {i === 2 && <SyncButton />}
+                    {i === 0 && (
+                      <a
+                        href={getSignInUrl()}
+                        className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                      >
+                        Sign in with GitHub
+                      </a>
+                    )}
+                    {i === 1 && (
+                      <ConnectBankButton
+                        sessionToken={sessionToken}
+                        subscriptionStatus={subscriptionStatus}
+                      />
+                    )}
+                    {i === 2 && (
+                      <ConnectBankButton
+                        sessionToken={sessionToken}
+                        subscriptionStatus={subscriptionStatus}
+                      />
+                    )}
+                    {i === 3 && <SyncButton />}
                   </div>
                 )}
               </div>

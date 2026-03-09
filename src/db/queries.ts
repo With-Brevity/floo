@@ -19,12 +19,27 @@ export function setSetting(key: string, value: string) {
     .run();
 }
 
-export function getApiKey(): string | null {
-  return getSetting("api_key");
+export function getSessionToken(): string | null {
+  return getSetting("session_token");
 }
 
-export function setApiKey(key: string) {
-  setSetting("api_key", key);
+export function setSessionToken(token: string) {
+  setSetting("session_token", token);
+}
+
+export function clearSession() {
+  const sessionKeys = [
+    "session_token",
+    "user_id",
+    "user_email",
+    "user_name",
+    "subscription_status",
+  ];
+  for (const key of sessionKeys) {
+    db.delete(schema.settings)
+      .where(eq(schema.settings.key, key))
+      .run();
+  }
 }
 
 export function clearAllData() {
